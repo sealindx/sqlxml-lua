@@ -1,0 +1,182 @@
+
+
+<mapper namespace = "cc.dd">
+	<sql id="limit_num">
+		time&lt;'2020-3-3' and  time &gt; '2019-12-12'
+		limit #{p._start}, #{p._end}
+	</sql>
+
+
+	<select id="selectAllUser">
+	    select * from user
+	    where uname like '%${u_name}',
+	    and usex = #{u_sex}
+	    <if test="bio ~= nil">bio=#{bio}</if><include refid = "limit_num" />
+	</select>
+
+	<select id="findActiveBlogLike"  resultType="Blog">
+		SELECT * FROM BLOG 
+		<where> 
+			<if test="state ~= nil">
+				state = #{state}
+			</if> 
+			<if test="title ~= nil">
+				AND title like #{title}
+			</if>
+			<if test="author ~= nil and author.name ~= nil">
+				AND author_name like '%${author.name}'
+			</if>
+		</where>
+	</select>
+
+	<update id="updateUser" parameterType="com.it.bean.user">
+        update user
+        <set>
+            <if test="username ~= nil and username ~= ''">
+                username = #{username},
+            </if>
+            <if test="sex ~= nil and sex == 0 or sex == 1">
+                sex = #{sex},
+            </if>
+            <if test="birthday ~= nil ">  
+                birthday = #{birthday},
+            </if >  
+            <if test="lastModifiedBy ~= nil and lastModifiedBy ~= ''">
+                last_modified_by = #{lastModifiedBy},
+                last_modified_date = SYSDATE,
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+
+
+	<select id="dynamicChooseTest" parameterType="Blog" resultType="Blog">
+        select * from t_blog
+        <where>
+	        <choose>
+	            <when test="title ~= nil">
+	                and title = #{title}
+	            </when>
+	            <when test="content ~= nil">
+	                and content = #{content}
+	            </when>
+	            <otherwise>
+	                and owner = "owner1"
+	            </otherwise>
+	        </choose>
+	    </where>
+    </select>
+
+    <update id="updateByForeach">
+        update sys_user
+        set
+        <foreach collection="users" item="val" index="key" separator=",">
+            ${key}=#{val}
+        </foreach>
+        where id=#{id}
+    </update>
+
+
+    <insert id="inserSysUser">
+        insert into sys_user(
+        user_name,user_password,user_email)
+        values
+        <foreach collection="list" item="user" separator="," >
+            (
+            #{user.userName},#{user.userPassword},#{user.userEmail}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getFieldsValue" parameterType="java.util.Map" resultType="java.util.HashMap">
+        SELECT * FROM
+        #{tableName} t
+			<if test="conditions ~= nil and #conditions &gt; 0">
+            <where>
+                <foreach collection="conditions" item="item">
+                    <choose>
+	                    <when test='item.condition_type == 1'>
+	                        AND integral BETWEEN #{item.condition_min} AND #{item.condition_max}
+	                    </when>
+	                    <when test='item.condition_type == 2'> 
+	                        AND consume_money BETWEEN #{item.condition_min} AND #{item.condition_max}
+	                    </when>
+                    </choose>
+                </foreach>
+            </where>
+      </if>
+
+    </select>
+
+
+    <insert id="insertSelective" parameterType="com.model.Carousel" >
+    insert into carousel
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="uid ~= nil" >
+        uid,
+      </if>
+      <if test="title ~= nil" >
+        title,
+      </if>
+      <if test="showimg ~= nil" >
+        showimg,
+      </if>
+      <if test="looked ~= nil" >
+        looked,
+      </if>
+      <if test="content ~= nil" >
+        content,
+      </if>
+      <if test="showpart ~= nil" >
+        showpart,
+      </if>
+       createtime
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="caid ~= nil" >
+        #{caid},
+      </if>
+      <if test="uid ~= nil" >
+        #{uid},
+      </if>
+      <if test="title ~= nil" >
+        #{title},
+      </if>
+      <if test="showimg ~= nil" >
+        #{showimg},
+      </if>
+      <if test="looked ~= nil" >
+        #{looked},
+      </if>
+      <if test="content ~= nil" >
+        #{content},
+      </if>
+      <if test="showpart ~= nil" >
+        #{showpart},
+      </if>
+      now()
+    </trim>
+  </insert>
+
+
+	<update id="updateUserInfo" parameterType="com.it.bean.User">
+   		update user
+        <!-- 开头加上set，结尾去除最后一个逗号 -->
+        <trim prefix="set" suffixOverrides=",">
+            <if test="username~= nil and username ~= ''">
+                name= #{username},
+            </if>
+
+            <if test="password~=nil and password ~= ''">
+                password= #{password} ,
+            </if>
+
+        </trim>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+</mapper>
